@@ -1,5 +1,6 @@
-/**
- * Copyright 2023 LiveKit, Inc.
+/*
+ * ChatLayout.tsx - Layout for video chat.
+ * The remote participant occupies the entire screen, and the local participant is shown in a small overlay in the top-right corner.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,48 +15,47 @@
  * limitations under the License.
  */
 
-import { VideoTrack, useLocalParticipant } from '@livekit/components-react';
+import React from 'react';
+import { TrackReference } from '@livekit/components-core';
+import { VideoTrack, useVisualStableUpdate } from '@livekit/components-react';
 import { LayoutProps } from './common';
 
 const ChatLayout = ({ tracks: references }: LayoutProps) => {
-  const { localParticipant } = useLocalParticipant();
-  
-  // Find the local participant's track reference
-  const localTrackRef = references.find(
-    (ref) => ref.participant.identity === localParticipant.identity
-  );
-  
-  // Find the remote participant's track reference
-  const remoteTrackRef = references.find(
-    (ref) => ref.participant.identity !== localParticipant.identity
-  );
+  // Use a stable update to avoid unnecessary re-renders, similar to SpeakerLayout
+  const sortedTracks = useVisualStableUpdate(references, 1);
 
-  if (!remoteTrackRef || !localTrackRef) {
+  if (sortedTracks.length === 0) {
     return <></>;
   }
 
+  // Assume the first track is the remote participant and the second (if exists) is self
+  const remoteTrack = sortedTracks[0];
+  const selfTrack = sortedTracks[1];
+
   return (
-    <div className="lk-chat-layout" style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {/* Remote participant's video (full screen) */}
-      <div style={{ width: '100%', height: '100%' }}>
-        <VideoTrack trackRef={remoteTrackRef} />
-      </div>
-      
-      {/* Local participant's video (small overlay) */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          width: '200px',
-          height: '150px',
-          borderRadius: '8px',
-          overflow: 'hidden',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-        }}
-      >
-        <VideoTrack trackRef={localTrackRef} />
-      </div>
+    <div className="chat-layout" style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {remoteTrack && (
+        <div className="chat-layout-remote" style={{ width: '100%', height: '100%' }}>
+          <VideoTrack trackRef={remoteTrack as TrackReference} />
+        </div>
+      )}
+      {selfTrack && (
+        <div
+          className="chat-layout-self"
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            width: 200,
+            height: 150,
+            border: '2px solid #fff',
+            boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+            backgroundColor: '#000'
+          }}
+        >
+          <VideoTrack trackRef={selfTrack as TrackReference} />
+        </div>
+      )}
     </div>
   );
 };
