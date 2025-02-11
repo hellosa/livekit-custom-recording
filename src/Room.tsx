@@ -27,6 +27,7 @@ import { ConnectionState, Track } from 'livekit-client';
 import { ReactElement, useEffect, useState } from 'react';
 import SingleSpeakerLayout from './SingleSpeakerLayout';
 import SpeakerLayout from './SpeakerLayout';
+import ChatLayout from './ChatLayout';
 
 const FRAME_DECODE_TIMEOUT = 5000;
 
@@ -153,6 +154,8 @@ function CompositeTemplate({ layout: initialLayout }: CompositeTemplateProps) {
       main = <SpeakerLayout tracks={filteredTracks} />;
     } else if (effectiveLayout.startsWith('single-speaker')) {
       main = <SingleSpeakerLayout tracks={filteredTracks} />;
+    } else if (effectiveLayout.startsWith('chat')) {
+      main = <ChatLayout tracks={filteredTracks} />;
     } else {
       main = (
         <GridLayout tracks={filteredTracks}>
